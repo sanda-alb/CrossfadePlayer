@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Player</string>
+    <string name="add_second_track">ADD SECOND TRACK</string>
+    <string name="crossfade">CROSSFADE</string>
+    <string name="_0">0</string>
+    <string name="add_first_track">ADD FIRST TRACK</string>
+</resources>
