@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.widget.*
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -16,6 +17,9 @@ import androidx.annotation.RequiresApi
 import com.example.player.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.lang.Exception
 
 
 class MainActivity : AppCompatActivity() {
@@ -57,7 +61,7 @@ class MainActivity : AppCompatActivity() {
 
 
     fun selectTrack() {
-        addFirstTrack.setOnClickListener{
+        addFirstTrack.setOnClickListener {
             addTrack(resultLauncher1)
         }
         addSecondTrack.setOnClickListener {
@@ -71,30 +75,47 @@ class MainActivity : AppCompatActivity() {
         resultLauncher.launch(intent)
     }
 
-    val resultLauncher1 = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
-    {result ->
-        loadTrack(mediaPlayers.first(), result)
-        firstTrack = result.data?.data!!
-    }
+    val resultLauncher1 =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+        { result ->
+            loadTrack(mediaPlayers.first(), result)
+            firstTrack = result.data?.data!!
+        }
 
-    val resultLauncher2 = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
-    {   result ->
-        loadTrack(mediaPlayers.last(), result)
-        secondTrack = result.data?.data!!
-    }
+    val resultLauncher2 =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult())
+        { result ->
+            loadTrack(mediaPlayers.last(), result)
+            secondTrack = result.data?.data!!
+        }
 
     fun loadTrack(mediaPlayer: MediaPlayer, result: ActivityResult) {
-        if (result.resultCode == Activity.RESULT_OK) {
-            val data: Intent? = result.data
-            if (data != null) {
-                mediaPlayer.reset()
-                mediaPlayer.setDataSource(this, data.data!!)
-                mediaPlayer.prepare()
+        try {
+            if (result.resultCode == Activity.RESULT_OK) {
+                val data: Intent? = result.data
+
+                if (data != null) {
+                    mediaPlayer.reset()
+                    mediaPlayer.setDataSource(this, data.data!!)
+                    mediaPlayer.prepare()
+
+                    if (mediaPlayer.duration < (crossfadeTime * 2000)) {
+                        throw Exception("Song is too short.")
+                    }
+
+                }
             }
+        } catch (error: Exception) {
+            Toast.makeText(
+                this,
+                "Please, choose track longer than ${crossfadeTime * 2} sec",
+                Toast.LENGTH_LONG
+            ).show()
         }
+
     }
 
-    private fun changeCrossfadeBar():  Int {
+    private fun changeCrossfadeBar(): Int {
         crossfadeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onProgressChanged(crossfadeBar: SeekBar, progress: Int, changed: Boolean) {
@@ -109,9 +130,30 @@ class MainActivity : AppCompatActivity() {
                 }
 
             }
+
             override fun onStartTrackingTouch(p0: SeekBar?) {}
             override fun onStopTrackingTouch(p0: SeekBar?) {}
         })
         return crossfadeTime
     }
+
+    private fun volumeUp(mediaPlayer: MediaPlayer) = coroutineScope.launch {
+        var volume = 0.0f
+        while (mediaPlayer != Uri.EMPTY && volume < 0.1f) {
+            mediaPlayer.setVolume(volume, volume)
+            delay(100 * crossfadeTime.toLong())
+            volume += 0.1f
+        }
+    }
+
+    private fun volumeDown(mediaPlayer: MediaPlayer) = coroutineScope.launch {
+        var volume = 1.0f
+        while (mediaPlayer != Uri.EMPTY && volume > 0.0f) {
+            mediaPlayer.setVolume(volume, volume)
+            delay(100 * crossfadeTime.toLong())
+            volume -= 0.1f
+        }
+    }
+
+
 }
