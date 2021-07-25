@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -11,6 +12,7 @@ import android.widget.*
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import com.example.player.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -50,6 +52,7 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Add two tracks and set crossfade time", Toast.LENGTH_LONG).show()
 
         selectTrack()
+        changeCrossfadeBar()
     }
 
 
@@ -89,5 +92,26 @@ class MainActivity : AppCompatActivity() {
                 mediaPlayer.prepare()
             }
         }
+    }
+
+    private fun changeCrossfadeBar():  Int {
+        crossfadeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            @RequiresApi(Build.VERSION_CODES.O)
+            override fun onProgressChanged(crossfadeBar: SeekBar, progress: Int, changed: Boolean) {
+                crossfadeBar.max = 10
+                crossfadeBar.min = 2
+
+                if (progress >= 2) {
+                    crossfadeTime = progress
+                }
+                if (changed) {
+                    crossfadeText.text = crossfadeTime.toString()
+                }
+
+            }
+            override fun onStartTrackingTouch(p0: SeekBar?) {}
+            override fun onStopTrackingTouch(p0: SeekBar?) {}
+        })
+        return crossfadeTime
     }
 }
