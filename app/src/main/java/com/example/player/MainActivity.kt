@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity() {
 
         selectTrack()
         changeCrossfadeBar()
+        playButton.setOnClickListener{startPlay()}
     }
 
 
@@ -148,10 +149,49 @@ class MainActivity : AppCompatActivity() {
 
     private fun volumeDown(mediaPlayer: MediaPlayer) = coroutineScope.launch {
         var volume = 1.0f
+
         while (mediaPlayer != Uri.EMPTY && volume > 0.0f) {
+            Log.d("LogM", "VolumeDown: $volume")
             mediaPlayer.setVolume(volume, volume)
             delay(100 * crossfadeTime.toLong())
             volume -= 0.1f
+        }
+        mediaPlayer.pause()
+    }
+
+    fun start (currentMediaPlayer: MediaPlayer) {
+        Log.d("Work", "Start")
+        currentMediaPlayer.seekTo(0)
+        volumeUp(currentMediaPlayer)
+        currentMediaPlayer.start()
+
+        var position = currentMediaPlayer.currentPosition
+        val duration = currentMediaPlayer.duration - crossfadeTime * 1000
+
+        while (position < duration) {
+            position = currentMediaPlayer.currentPosition
+        }
+
+        volumeDown(currentMediaPlayer)
+        val nextMediaPlayer = mediaPlayers.find{it != currentMediaPlayer}
+        if(nextMediaPlayer != null) {
+            start(nextMediaPlayer)
+        }
+    }
+
+    fun startPlay() {
+
+        Log.d("Work", "Start play")
+        if(firstTrack != Uri.EMPTY && secondTrack != Uri.EMPTY) {
+            playButton.isClickable = false
+            addFirstTrack.isClickable = false
+            addSecondTrack.isClickable = false
+            start(mediaPlayers.first())
+        } else if (firstTrack == Uri.EMPTY) {
+            Toast.makeText(applicationContext, "Add first track to play", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(applicationContext, "Add second track to play", Toast.LENGTH_SHORT)
+                .show()
         }
     }
 
