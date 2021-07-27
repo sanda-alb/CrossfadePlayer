@@ -59,7 +59,18 @@ class MainActivity : AppCompatActivity() {
 
         selectTrack()
         changeCrossfadeBar()
-        playButton.setOnClickListener{startPlay()}
+        playButton.setOnClickListener {
+            if (!mediaPlayers.first().isPlaying && !mediaPlayers.last().isPlaying) {
+                startPlay()
+                playButton.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
+            } else {
+                stopPlay()
+
+            }
+
+        }
+
+
     }
 
 
@@ -160,7 +171,7 @@ class MainActivity : AppCompatActivity() {
         mediaPlayer.pause()
     }
 
-    fun start (currentMediaPlayer: MediaPlayer) {
+    fun start(currentMediaPlayer: MediaPlayer) {
         Log.d("Work", "Start")
         currentMediaPlayer.seekTo(0)
         volumeUp(currentMediaPlayer)
@@ -174,8 +185,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         volumeDown(currentMediaPlayer)
-        val nextMediaPlayer = mediaPlayers.find{it != currentMediaPlayer}
-        if(nextMediaPlayer != null) {
+        val nextMediaPlayer = mediaPlayers.find { it != currentMediaPlayer }
+        if (nextMediaPlayer != null) {
             start(nextMediaPlayer)
         }
     }
@@ -183,8 +194,7 @@ class MainActivity : AppCompatActivity() {
     fun startPlay() {
 
         Log.d("Work", "Start play")
-        if(firstTrack != Uri.EMPTY && secondTrack != Uri.EMPTY) {
-            playButton.isClickable = false
+        if (firstTrack != Uri.EMPTY && secondTrack != Uri.EMPTY) {
             addFirstTrack.isClickable = false
             addSecondTrack.isClickable = false
             start(mediaPlayers.first())
@@ -193,6 +203,15 @@ class MainActivity : AppCompatActivity() {
         } else {
             Toast.makeText(applicationContext, "Add second track to play", Toast.LENGTH_SHORT)
                 .show()
+        }
+    }
+
+    fun stopPlay() {
+        playButton.setImageResource(R.drawable.ic_baseline_pause_circle_outline)
+        if (mediaPlayers.first().isPlaying) {
+            mediaPlayers.first().pause()
+        } else {
+            mediaPlayers.last().pause()
         }
     }
 

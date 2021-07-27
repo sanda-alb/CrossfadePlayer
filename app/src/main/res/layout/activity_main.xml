@@ -34,7 +34,7 @@
         android:clickable="true"
         android:focusable="true"
         android:scaleType="centerCrop"
-        app:srcCompat="@drawable/ic_baseline_play_circle_outline"
+        app:srcCompat="@drawable/ic_baseline_play_circle_outline_24"
         app:tint="@color/purple_200" />
 
 
