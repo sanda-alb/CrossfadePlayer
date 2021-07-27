@@ -43,6 +43,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
@@ -53,6 +54,7 @@ class MainActivity : AppCompatActivity() {
         crossfadeText = binding.crossfadeTime
         crossfadeText.text = crossfadeTime.toString()
         playButton = binding.playButton
+
         Toast.makeText(this, "Add two tracks and set crossfade time", Toast.LENGTH_LONG).show()
 
         selectTrack()
@@ -116,7 +118,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun changeCrossfadeBar(): Int {
+    private fun changeCrossfadeBar() {
         crossfadeBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             @RequiresApi(Build.VERSION_CODES.O)
             override fun onProgressChanged(crossfadeBar: SeekBar, progress: Int, changed: Boolean) {
@@ -135,12 +137,11 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(p0: SeekBar?) {}
             override fun onStopTrackingTouch(p0: SeekBar?) {}
         })
-        return crossfadeTime
     }
 
     private fun volumeUp(mediaPlayer: MediaPlayer) = coroutineScope.launch {
         var volume = 0.0f
-        while (mediaPlayer != Uri.EMPTY && volume < 0.1f) {
+        while (volume < 1.0f) {
             mediaPlayer.setVolume(volume, volume)
             delay(100 * crossfadeTime.toLong())
             volume += 0.1f
