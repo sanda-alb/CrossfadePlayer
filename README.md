@@ -8,7 +8,8 @@ You can change crossfade time from 2 to 10 seconds. We have track length restric
 ### UI
 
 We have 2 buttons for track uploading. Seekbar for crossfade time changing and play button.
-Player has infinite loop, so uploaded tracks will play after each other.
+Player has infinite loop, so uploaded tracks will play after each other. User can stop playback and 
+play from the very beginning.
 
 ### Installion
 

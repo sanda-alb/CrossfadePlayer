@@ -15,10 +15,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import com.example.player.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.lang.Exception
 
 
@@ -33,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     private var firstTrack: Uri = Uri.EMPTY
     private var secondTrack: Uri = Uri.EMPTY
     val mediaPlayers = mutableListOf<MediaPlayer>(MediaPlayer(), MediaPlayer())
+    var playThread: Job? = null
 
     lateinit var crossfadeBar: SeekBar
     lateinit var crossfadeText: TextView
@@ -60,17 +58,12 @@ class MainActivity : AppCompatActivity() {
         selectTrack()
         changeCrossfadeBar()
         playButton.setOnClickListener {
-            if (!mediaPlayers.first().isPlaying && !mediaPlayers.last().isPlaying) {
-                startPlay()
-                playButton.setImageResource(R.drawable.ic_baseline_play_circle_outline_24)
+            if (playThread != null && playThread!!.isActive) {
+                stopPlay(playButton)
             } else {
-                stopPlay()
-
+                startPlay(playButton)
             }
-
         }
-
-
     }
 
 
@@ -151,8 +144,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun volumeUp(mediaPlayer: MediaPlayer) = coroutineScope.launch {
+        Log.d("LogM", "VolumeUp called")
         var volume = 0.0f
         while (volume < 1.0f) {
+            Log.d("LogM", "VolumeUp: $volume")
             mediaPlayer.setVolume(volume, volume)
             delay(100 * crossfadeTime.toLong())
             volume += 0.1f
@@ -160,8 +155,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun volumeDown(mediaPlayer: MediaPlayer) = coroutineScope.launch {
+        Log.d("LogM", "VolumeDown called")
         var volume = 1.0f
-
         while (mediaPlayer != Uri.EMPTY && volume > 0.0f) {
             Log.d("LogM", "VolumeDown: $volume")
             mediaPlayer.setVolume(volume, volume)
@@ -171,33 +166,35 @@ class MainActivity : AppCompatActivity() {
         mediaPlayer.pause()
     }
 
-    fun start(currentMediaPlayer: MediaPlayer) {
+    fun start() = coroutineScope.launch  {
         Log.d("Work", "Start")
-        currentMediaPlayer.seekTo(0)
-        volumeUp(currentMediaPlayer)
-        currentMediaPlayer.start()
+        var times = 0
+        do {
+            var currentMediaPlayer = mediaPlayers[times % 2]
 
-        var position = currentMediaPlayer.currentPosition
-        val duration = currentMediaPlayer.duration - crossfadeTime * 1000
+            currentMediaPlayer.seekTo(0)
+            volumeUp(currentMediaPlayer)
+            currentMediaPlayer.start()
 
-        while (position < duration) {
-            position = currentMediaPlayer.currentPosition
-        }
+            var position = currentMediaPlayer.currentPosition
+            val duration = currentMediaPlayer.duration - crossfadeTime * 1000
 
-        volumeDown(currentMediaPlayer)
-        val nextMediaPlayer = mediaPlayers.find { it != currentMediaPlayer }
-        if (nextMediaPlayer != null) {
-            start(nextMediaPlayer)
-        }
+            while (position < duration) {
+                position = currentMediaPlayer.currentPosition
+            }
+
+            volumeDown(currentMediaPlayer)
+            times += 1
+        } while (true)
     }
 
-    fun startPlay() {
-
+    fun startPlay(playButton: ImageButton) {
         Log.d("Work", "Start play")
         if (firstTrack != Uri.EMPTY && secondTrack != Uri.EMPTY) {
             addFirstTrack.isClickable = false
             addSecondTrack.isClickable = false
-            start(mediaPlayers.first())
+            playButton.setImageResource(R.drawable.ic_baseline_stop_circle)
+            playThread = start()
         } else if (firstTrack == Uri.EMPTY) {
             Toast.makeText(applicationContext, "Add first track to play", Toast.LENGTH_SHORT).show()
         } else {
@@ -206,14 +203,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun stopPlay() {
-        playButton.setImageResource(R.drawable.ic_baseline_pause_circle_outline)
-        if (mediaPlayers.first().isPlaying) {
-            mediaPlayers.first().pause()
-        } else {
-            mediaPlayers.last().pause()
-        }
+    fun stopPlay(playButton: ImageButton) {
+        Log.d("Work", "Stop play")
+        playThread!!.cancel()
+        addFirstTrack.isClickable = true
+        addSecondTrack.isClickable = true
+        mediaPlayers.forEach { if (it.isPlaying) it.pause() }
+
+        playButton.setImageResource(R.drawable.ic_baseline_play_circle_outline)
     }
-
-
 }
