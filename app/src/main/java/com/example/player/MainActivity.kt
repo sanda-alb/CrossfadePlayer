@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
     private var firstTrack: Uri = Uri.EMPTY
     private var secondTrack: Uri = Uri.EMPTY
     val mediaPlayers = mutableListOf<MediaPlayer>(MediaPlayer(), MediaPlayer())
-    var playThread: Job? = null
+    var playThread: Job = Job()
 
     lateinit var crossfadeBar: SeekBar
     lateinit var crossfadeText: TextView
@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         selectTrack()
         changeCrossfadeBar()
         playButton.setOnClickListener {
-            if (playThread != null && playThread!!.isActive) {
+            if (playThread.isActive) {
                 stopPlay(playButton)
             } else {
                 startPlay(playButton)
@@ -205,7 +205,7 @@ class MainActivity : AppCompatActivity() {
 
     fun stopPlay(playButton: ImageButton) {
         Log.d("Work", "Stop play")
-        playThread!!.cancel()
+        playThread.cancel()
         addFirstTrack.isClickable = true
         addSecondTrack.isClickable = true
         mediaPlayers.forEach { if (it.isPlaying) it.pause() }
