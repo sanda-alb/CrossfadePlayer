@@ -58,14 +58,13 @@ class MainActivity : AppCompatActivity() {
         selectTrack()
         changeCrossfadeBar()
         playButton.setOnClickListener {
-            if (playThread.isActive) {
-                stopPlay(playButton)
-            } else {
+            if (playThread.isCancelled) {
                 startPlay(playButton)
+            } else {
+                stopPlay(playButton)
             }
         }
     }
-
 
     fun selectTrack() {
         addFirstTrack.setOnClickListener {
@@ -146,7 +145,7 @@ class MainActivity : AppCompatActivity() {
     private fun volumeUp(mediaPlayer: MediaPlayer) = coroutineScope.launch {
         Log.d("LogM", "VolumeUp called")
         var volume = 0.0f
-        while (volume < 1.0f) {
+        while (volume < 1.0f && playThread.isActive) {
             Log.d("LogM", "VolumeUp: $volume")
             mediaPlayer.setVolume(volume, volume)
             delay(100 * crossfadeTime.toLong())
@@ -157,7 +156,7 @@ class MainActivity : AppCompatActivity() {
     private fun volumeDown(mediaPlayer: MediaPlayer) = coroutineScope.launch {
         Log.d("LogM", "VolumeDown called")
         var volume = 1.0f
-        while (mediaPlayer != Uri.EMPTY && volume > 0.0f) {
+        while (volume > 0.0f && playThread.isActive) {
             Log.d("LogM", "VolumeDown: $volume")
             mediaPlayer.setVolume(volume, volume)
             delay(100 * crossfadeTime.toLong())
@@ -170,7 +169,7 @@ class MainActivity : AppCompatActivity() {
         Log.d("Work", "Start")
         var times = 0
         do {
-            var currentMediaPlayer = mediaPlayers[times % 2]
+            val currentMediaPlayer = mediaPlayers[times % 2]
 
             currentMediaPlayer.seekTo(0)
             volumeUp(currentMediaPlayer)
@@ -185,7 +184,7 @@ class MainActivity : AppCompatActivity() {
 
             volumeDown(currentMediaPlayer)
             times += 1
-        } while (true)
+        } while (playThread.isActive)
     }
 
     fun startPlay(playButton: ImageButton) {
